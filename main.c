@@ -9,18 +9,121 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <stdbool.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include "list.h"
+
+char** tokenify(const char *s) {
+    int len = strlen(s);
+
+    // token position and length flag
+    int* token_flag = malloc((len + 1) * sizeof(int));
+    int token_count = 0; // the total num of tokens
+    int counter = 0;    // temp counter for token length
+
+    // marks beginning of each token with token length
+    for (int i = len - 1; i >= 0; i--) {
+        if (s[i] == '#') {
+            counter = 0;
+            token_count = 0;
+            for (int j = i; j < len; j++) { token_flag[j] = 0; }
+            continue;
+        }
+
+        if (!isspace(s[i])) { counter++;}
+
+        if (counter > 0 && (i == 0 || isspace(s[i-1]))) {
+            token_flag[i] = counter;
+            counter = 0;
+            token_count++;
+        }
+        else {
+            token_flag[i] = 0;
+        }
+    }
+
+    // the tokens to return
+    char** tokens = malloc((token_count + 1) * sizeof(char*));
+
+    int j = 0;
+
+    // assign tokens for each token pointer
+    for (int i = 0; i < token_count; i++) {
+        while (token_flag[j] < 1) { j++; }
+        int token_len = token_flag[j];  // length of each token
+
+        // allocate each token space
+        tokens[i] = malloc((token_len + 1) * sizeof(char));
+
+        for (int lcount = 0; lcount < token_len; lcount++) {
+            tokens[i][lcount] = s[j];
+            j++;
+        }
+        tokens[i][token_len] = '\0';
+    }
+
+    tokens[token_count] = NULL;
+
+    free(token_flag);
+
+    return tokens;
+}
+
+
+bool proper_int(char *str) {
+    int len = strlen(str);
+    if (len <= 0) {
+        return false;
+    }
+    else if (len == 1) {
+        if (isdigit(str[0])) { return true; }
+    }
+    else {
+        if (str[0] != '-' && (!isdigit(str[0]))) { return false; }
+        for (int i = 1; i < len; i++) {
+            if (!isdigit(str[i])) { return false;}
+        }
+        return true;
+    }
+}
+
 
 void process_data(FILE *input_file) {
     // !! your code should start here.  the input_file parameter
     // is an already-open file.  you can read data from it using
     // the fgets() C library function.  close it with the fclose()
     // built-in function
+    char *content = malloc(1000 * sizeof(char));
+    struct node *list = NULL;
+    
+    while (fgets(content, 1000, input_file) != NULL) {
+        char **tokens = tokenify(content);
+        char **token_curr = tokens;
 
+        while (*token_curr != NULL) {
+            if (proper_int(*token_curr)) {
+                list_insert(atoi(*token_curr), &list);
+            }
+            free(*token_curr);
+            token_curr++;
+        }
+        free(tokens);
+    }
 
+    list_sort(&list);
+    list_print(list);
 
+    struct rusage *stat = malloc(sizeof(struct rusage));
+    getrusage(RUSAGE_SELF, stat);
 
+    printf("User time: %f\n", ((double) stat->ru_utime.tv_sec) + (double) stat->ru_utime.tv_usec / 1000000);
+    printf("System time: %f\n", ((double) stat->ru_stime.tv_sec) + (double) stat->ru_stime.tv_usec / 1000000);
+
+    list_clear(list);
+    free(content);
+    free(stat);
 }
 
 
