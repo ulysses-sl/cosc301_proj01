@@ -25,6 +25,7 @@ char** tokenify(const char *s) {
 
     // marks beginning of each token with token length
     for (int i = len - 1; i >= 0; i--) {
+        // ignore and nullify any token after '#'
         if (s[i] == '#') {
             counter = 0;
             token_count = 0;
@@ -32,8 +33,10 @@ char** tokenify(const char *s) {
             continue;
         }
 
+        // count every non-space for each token length
         if (!isspace(s[i])) { counter++;}
 
+        // create flags for beginning of each token, containing its length
         if (counter > 0 && (i == 0 || isspace(s[i-1]))) {
             token_flag[i] = counter;
             counter = 0;
