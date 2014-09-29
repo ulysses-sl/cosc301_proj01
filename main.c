@@ -75,6 +75,7 @@ char** tokenify(const char *s) {
 }
 
 
+// check if the token is a proper int
 bool proper_int(char *str) {
     int len = strlen(str);
     if (len <= 0) {
@@ -94,10 +95,6 @@ bool proper_int(char *str) {
 
 
 void process_data(FILE *input_file) {
-    // !! your code should start here.  the input_file parameter
-    // is an already-open file.  you can read data from it using
-    // the fgets() C library function.  close it with the fclose()
-    // built-in function
     char *content = malloc(1000 * sizeof(char));
     struct node *list = NULL;
     
@@ -127,6 +124,7 @@ void process_data(FILE *input_file) {
     list_clear(list);
     free(content);
     free(stat);
+    // no need to fclose: done in main
 }
 
 
