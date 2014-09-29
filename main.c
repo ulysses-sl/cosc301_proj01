@@ -116,7 +116,11 @@ void process_data(FILE *input_file) {
     list_print(list);
 
     struct rusage *stat = malloc(sizeof(struct rusage));
-    getrusage(RUSAGE_SELF, stat);
+    int errcode = getrusage(RUSAGE_SELF, stat);
+    if (errcode != 0) {
+        perror(strerror(errcode));
+        return;
+    }
 
     printf("User time: %f\n", ((double) stat->ru_utime.tv_sec) + (double) stat->ru_utime.tv_usec / 1000000);
     printf("System time: %f\n", ((double) stat->ru_stime.tv_sec) + (double) stat->ru_stime.tv_usec / 1000000);
