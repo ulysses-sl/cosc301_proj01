@@ -119,6 +119,9 @@ void process_data(FILE *input_file) {
     int errcode = getrusage(RUSAGE_SELF, stat);
     if (errcode != 0) {
         perror(strerror(errcode));
+        list_clear(list);
+        free(content);
+        free(stat);
         return;
     }
 
